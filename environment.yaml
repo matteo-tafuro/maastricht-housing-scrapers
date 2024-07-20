@@ -1,0 +1,10 @@
+name: rental_scraper
+channels:
+  - conda-forge
+  - anaconda
+dependencies:
+  - python=3.9
+  - selenium
+  - webdriver-manager
+  - lxml
+  - requests

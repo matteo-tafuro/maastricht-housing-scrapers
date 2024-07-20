@@ -1,0 +1,12 @@
+# Ignore intellij idea files
+.idea
+# VS Code
+.vscode
+# System Files
+.DS_Store
+# Misc
+__pycache__
+# Logs
+geckodriver.log
+# Output of the main function
+previous_items.json
