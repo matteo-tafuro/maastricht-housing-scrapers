@@ -21,7 +21,8 @@ url = (
 )
 
 # Path to the JSON file to store previously seen items
-json_file_path = "previous_items.json"
+json_file_name = "previous_items.json"
+json_file_path = os.path.join(os.path.dirname(__file__), json_file_name)
 
 # Email settings
 gmail_user = os.getenv("GMAIL_USER")
@@ -173,7 +174,7 @@ def main():
     was sent successfully.
     """
     current_items = fetch_rental_places(url)
-    previous_items = load_previous_items(json_file_path)
+    previous_items = load_previous_items(json_file_name)
 
     current_items_without_links = [
         {k: v for k, v in item.items() if k != "link"} for item in current_items
@@ -200,7 +201,7 @@ def main():
             print(f"{item['address']}, {item['cost']}")
 
     if was_email_successful:
-        save_current_items(json_file_path, current_items)
+        save_current_items(json_file_name, current_items)
 
 
 if __name__ == "__main__":
