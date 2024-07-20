@@ -81,13 +81,16 @@ def fetch_rental_places(url):
 
         # Extract the cost and format it
         cost = cost_element.text
-        # Remove the ' p.m' from the cost
-        cost = cost.replace(" p.m", "")
-        # Transform the part that says 'Total rental price: €XXX.XX' to '(total: €XXX.XX)'
-        cost = cost.replace("Total rental price: ", "(total: ")
-        cost = cost + ")"
-        # Remove newline from cost
-        cost = cost.replace("\n", "")
+        if cost:
+            # Remove the ' p.m' from the cost
+            cost = cost.replace(" p.m", "")
+            # Transform the part that says 'Total rental price: €XXX.XX' to '(total: €XXX.XX)'
+            cost = cost.replace("Total rental price: ", "(total: ")
+            cost = cost + ")"
+            # Remove newline from cost
+            cost = cost.replace("\n", "")
+        else:
+            cost = "N/A"
 
         # Create a dictionary with the address, cost, and link
         listing = {"address": address, "cost": cost, "link": link}
