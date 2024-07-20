@@ -21,13 +21,12 @@ url = (
 )
 
 # Path to the JSON file to store previously seen items
-json_file_name = "previous_items.json"
-json_file_path = os.path.join(os.path.dirname(__file__), json_file_name)
+json_file_path = "previous_items.json"
 
 # Email settings
 gmail_user = os.getenv("GMAIL_USER")
 gmail_password = os.getenv("GMAIL_APP_PASSWORD")
-recipient_email = os.getenv("RECIPIENT_EMAIL")
+recipient_emails = os.getenv("RECIPIENT_EMAILS").split(",")
 
 
 def fetch_rental_places(url):
@@ -148,7 +147,7 @@ def send_email(new_items):
     # Create the email
     msg = MIMEMultipart()
     msg["From"] = gmail_user
-    msg["To"] = recipient_email
+    msg["To"] = ", ".join(recipient_emails)
     msg["Subject"] = subject
     msg.attach(MIMEText(body, "plain"))
 
@@ -158,7 +157,7 @@ def send_email(new_items):
         server.starttls()
         server.login(gmail_user, gmail_password)
         text = msg.as_string()
-        server.sendmail(gmail_user, recipient_email, text)
+        server.sendmail(gmail_user, recipient_emails, text)
         server.quit()
         print("Email sent successfully")
         return True
@@ -174,7 +173,7 @@ def main():
     was sent successfully.
     """
     current_items = fetch_rental_places(url)
-    previous_items = load_previous_items(json_file_name)
+    previous_items = load_previous_items(json_file_path)
 
     current_items_without_links = [
         {k: v for k, v in item.items() if k != "link"} for item in current_items
@@ -188,20 +187,20 @@ def main():
         item for item in previous_items if item not in current_items_without_links
     ]
 
-    was_email_successful = False
     if new_items:
         print("New rental places found:")
         for item in new_items:
             print(f"{item['address']}, {item['cost']}")
-        was_email_successful = send_email(new_items)
+        if send_email(new_items):
+            save_current_items(json_file_path, current_items)
 
     if removed_items:
         print("Removed rental places:")
         for item in removed_items:
             print(f"{item['address']}, {item['cost']}")
 
-    if was_email_successful:
-        save_current_items(json_file_name, current_items)
+    if not new_items:
+        save_current_items(json_file_path, current_items)
 
 
 if __name__ == "__main__":
