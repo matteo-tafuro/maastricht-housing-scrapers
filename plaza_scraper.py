@@ -10,6 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import json
 import os
+import time
 
 # Load environment variables from .env file
 load_dotenv(find_dotenv())
@@ -38,65 +39,87 @@ def fetch_rental_places(url):
 
     Returns:
         list: A list of dictionaries, each containing the address, cost, and link of a rental place.
+
+    Raises:
+        Exception: If unable to fetch rental places with address and cost after multiple retries.
     """
-    # Initialize the WebDriver. Define options
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    # Start the WebDriver
-    driver = webdriver.Chrome(
-        options=options, service=ChromeService(ChromeDriverManager().install())
-    )
-    driver.get(url)
-    # Wait for the page to load and display the elements
-    WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located(
-            (
-                By.XPATH,
-                "/html/body/main/div/div[3]/div/div/div/div/div/div/div/div/div/div[3]/div/div[2]",
+    rental_places = []
+    max_retries = 5
+    retries = 0
+
+    while retries < max_retries:
+        # Initialize the WebDriver. Define options
+        options = webdriver.ChromeOptions()
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        # Start the WebDriver
+        driver = webdriver.Chrome(
+            options=options, service=ChromeService(ChromeDriverManager().install())
+        )
+        driver.get(url)
+        # Wait for the page to load and display the elements
+        WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located(
+                (
+                    By.XPATH,
+                    "/html/body/main/div/div[3]/div/div/div/div/div/div/div/div/div/div[3]/div/div[2]",
+                )
             )
         )
-    )
 
-    # Extract the desired div using XPath
-    rental_div = driver.find_element(
-        By.XPATH,
-        "/html/body/main/div/div[3]/div/div/div/div/div/div/div/div/div/div[3]/div/div[2]",
-    )
-    rental_sections = rental_div.find_elements(By.TAG_NAME, "section")
+        # Extract the desired div using XPath
+        rental_div = driver.find_element(
+            By.XPATH,
+            "/html/body/main/div/div[3]/div/div/div/div/div/div/div/div/div/div[3]/div/div[2]",
+        )
+        rental_sections = rental_div.find_elements(By.TAG_NAME, "section")
 
-    # Get the address and cost from each section
-    rental_places = []
-    for section in rental_sections:
+        # Get the address and cost from each section
+        for section in rental_sections:
+            # Extract the href associated with the section
+            link_element = section.find_element(By.TAG_NAME, "a")
+            link = link_element.get_attribute("href")
 
-        # Extract the href associated with the section
-        link_element = section.find_element(By.TAG_NAME, "a")
-        link = link_element.get_attribute("href")
+            # Extract the address
+            address_element = section.find_element(
+                By.CLASS_NAME, "address-part.ng-binding"
+            )
+            address = address_element.text
+            cost_element = section.find_element(By.CLASS_NAME, "kosten.ng-scope")
 
-        # Extract the address
-        address_element = section.find_element(By.CLASS_NAME, "address-part.ng-binding")
-        address = address_element.text
-        cost_element = section.find_element(By.CLASS_NAME, "kosten.ng-scope")
+            # Extract the cost and format it
+            cost = cost_element.text
+            if cost:
+                # Remove the ' p.m' from the cost
+                cost = cost.replace(" p.m", "")
+                # Transform the part that says 'Total rental price: €XXX.XX' to '(total: €XXX.XX)'
+                cost = cost.replace("Total rental price: ", "(total: ")
+                cost = cost + ")"
+                # Remove newline from cost
+                cost = cost.replace("\n", "")
+            else:
+                cost = ""
 
-        # Extract the cost and format it
-        cost = cost_element.text
-        if cost:
-            # Remove the ' p.m' from the cost
-            cost = cost.replace(" p.m", "")
-            # Transform the part that says 'Total rental price: €XXX.XX' to '(total: €XXX.XX)'
-            cost = cost.replace("Total rental price: ", "(total: ")
-            cost = cost + ")"
-            # Remove newline from cost
-            cost = cost.replace("\n", "")
+            # Check if both address and cost are available
+            if address and cost:
+                # Create a dictionary with the address, cost, and link
+                listing = {"address": address, "cost": cost, "link": link}
+                rental_places.append(listing)
+
+        driver.quit()
+
+        if rental_places:
+            break
         else:
-            cost = "N/A"
+            retries += 1
+            time.sleep(5)  # Wait for 5 seconds before retrying
 
-        # Create a dictionary with the address, cost, and link
-        listing = {"address": address, "cost": cost, "link": link}
-        rental_places.append(listing)
+    if not rental_places:
+        raise Exception(
+            "Failed to fetch rental places with address and cost after multiple retries."
+        )
 
-    driver.quit()
     return rental_places
 
 
@@ -175,7 +198,12 @@ def main():
     and sends an email if there are new rental places. Saves current items only if email
     was sent successfully.
     """
-    current_items = fetch_rental_places(url)
+    try:
+        current_items = fetch_rental_places(url)
+    except Exception as e:
+        print(f"Error: {e}")
+        return
+
     previous_items = load_previous_items(json_file_path)
 
     current_items_without_links = [
@@ -190,19 +218,23 @@ def main():
         item for item in previous_items if item not in current_items_without_links
     ]
 
+    if not new_items and not removed_items:
+        print("No new rental places found.")
+        return
+
+    was_email_successful = False
     if new_items:
         print("New rental places found:")
         for item in new_items:
             print(f"{item['address']}, {item['cost']}")
-        if send_email(new_items):
-            save_current_items(json_file_path, current_items)
+        was_email_successful = send_email(new_items)
 
     if removed_items:
         print("Removed rental places:")
         for item in removed_items:
             print(f"{item['address']}, {item['cost']}")
 
-    if not new_items:
+    if was_email_successful:
         save_current_items(json_file_path, current_items)
 
 
