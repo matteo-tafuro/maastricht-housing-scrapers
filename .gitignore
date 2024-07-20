@@ -10,3 +10,5 @@ __pycache__
 geckodriver.log
 # Output of the main function
 previous_items.json
+# Sensitive data
+.env

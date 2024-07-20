@@ -1,3 +1,8 @@
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+from dotenv import load_dotenv, find_dotenv
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
@@ -6,13 +11,23 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import json
 import os
-import time
+
+# Load environment variables from .env file
+load_dotenv(find_dotenv())
 
 # URL of the rental finder website
-url = "https://plaza.newnewnew.space/en/availables-places/living-place#?gesorteerd-op=prijs%2B&land=524&locatie=Maastricht-Nederland%2B-%2BLimburg"
+url = (
+    "https://plaza.newnewnew.space/en/availables-places/living-place"
+    "#?gesorteerd-op=prijs%2B&land=524&locatie=Maastricht-Nederland%2B-%2BLimburg"
+)
 
 # Path to the JSON file to store previously seen items
 json_file_path = "previous_items.json"
+
+# Email settings
+gmail_user = os.getenv("GMAIL_USER")
+gmail_password = os.getenv("GMAIL_APP_PASSWORD")
+recipient_email = os.getenv("RECIPIENT_EMAIL")
 
 
 def fetch_rental_places(url):
@@ -87,6 +102,35 @@ def save_current_items(json_file_path, items):
         json.dump(items_to_save, file, ensure_ascii=False, indent=4)
 
 
+def send_email(new_items):
+    # Set up the email content
+    subject = (
+        f"{len(new_items)} new rental place{'s' if len(new_items) > 1 else ''} found!"
+    )
+    body = "New rental places found:\n\n"
+    for item in new_items:
+        body += f"{item['address']}, {item['cost']}\n{item['link']}\n\n"
+
+    # Create the email
+    msg = MIMEMultipart()
+    msg["From"] = gmail_user
+    msg["To"] = recipient_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
+
+    # Send the email
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(gmail_user, gmail_password)
+        text = msg.as_string()
+        server.sendmail(gmail_user, recipient_email, text)
+        server.quit()
+        print("Email sent successfully")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+
 def main():
     current_items = fetch_rental_places(url)
     previous_items = load_previous_items(json_file_path)
@@ -107,6 +151,7 @@ def main():
         print("New rental places found:")
         for item in new_items:
             print(f"{item['address']}, {item['cost']}")
+        send_email(new_items)
 
     if removed_items:
         print("Removed rental places:")
