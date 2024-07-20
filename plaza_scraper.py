@@ -1,7 +1,6 @@
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
 from dotenv import load_dotenv, find_dotenv
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -31,6 +30,15 @@ recipient_email = os.getenv("RECIPIENT_EMAIL")
 
 
 def fetch_rental_places(url):
+    """
+    Fetches rental places from the specified URL using Selenium.
+
+    Args:
+        url (str): The URL of the rental finder website.
+
+    Returns:
+        list: A list of dictionaries, each containing the address, cost, and link of a rental place.
+    """
     # Initialize the WebDriver. Define options
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
@@ -90,6 +98,15 @@ def fetch_rental_places(url):
 
 
 def load_previous_items(json_file_path):
+    """
+    Loads the previously seen rental places from a JSON file.
+
+    Args:
+        json_file_path (str): The path to the JSON file.
+
+    Returns:
+        list: A list of dictionaries representing previously seen rental places.
+    """
     if os.path.exists(json_file_path):
         with open(json_file_path, "r", encoding="utf-8") as file:
             return json.load(file)
@@ -97,12 +114,25 @@ def load_previous_items(json_file_path):
 
 
 def save_current_items(json_file_path, items):
+    """
+    Saves the current rental places to a JSON file.
+
+    Args:
+        json_file_path (str): The path to the JSON file.
+        items (list): A list of dictionaries representing the current rental places.
+    """
     items_to_save = [{k: v for k, v in item.items() if k != "link"} for item in items]
     with open(json_file_path, "w", encoding="utf-8") as file:
         json.dump(items_to_save, file, ensure_ascii=False, indent=4)
 
 
 def send_email(new_items):
+    """
+    Sends an email with the details of new rental places.
+
+    Args:
+        new_items (list): A list of dictionaries representing the new rental places.
+    """
     # Set up the email content
     subject = (
         f"{len(new_items)} new rental place{'s' if len(new_items) > 1 else ''} found!"
@@ -132,6 +162,10 @@ def send_email(new_items):
 
 
 def main():
+    """
+    Main function that fetches current rental places, compares them with previous items,
+    and sends an email if there are new rental places.
+    """
     current_items = fetch_rental_places(url)
     previous_items = load_previous_items(json_file_path)
 
