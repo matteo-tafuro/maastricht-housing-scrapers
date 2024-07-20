@@ -132,6 +132,9 @@ def send_email(new_items):
 
     Args:
         new_items (list): A list of dictionaries representing the new rental places.
+
+    Returns:
+        bool: True if the email was sent successfully, False otherwise.
     """
     # Set up the email content
     subject = (
@@ -157,14 +160,17 @@ def send_email(new_items):
         server.sendmail(gmail_user, recipient_email, text)
         server.quit()
         print("Email sent successfully")
+        return True
     except Exception as e:
         print(f"Failed to send email: {e}")
+        return False
 
 
 def main():
     """
     Main function that fetches current rental places, compares them with previous items,
-    and sends an email if there are new rental places.
+    and sends an email if there are new rental places. Saves current items only if email
+    was sent successfully.
     """
     current_items = fetch_rental_places(url)
     previous_items = load_previous_items(json_file_path)
@@ -181,18 +187,20 @@ def main():
         item for item in previous_items if item not in current_items_without_links
     ]
 
+    was_email_successful = False
     if new_items:
         print("New rental places found:")
         for item in new_items:
             print(f"{item['address']}, {item['cost']}")
-        send_email(new_items)
+        was_email_successful = send_email(new_items)
 
     if removed_items:
         print("Removed rental places:")
         for item in removed_items:
             print(f"{item['address']}, {item['cost']}")
 
-    save_current_items(json_file_path, current_items)
+    if was_email_successful:
+        save_current_items(json_file_path, current_items)
 
 
 if __name__ == "__main__":
