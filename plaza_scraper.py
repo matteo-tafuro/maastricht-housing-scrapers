@@ -154,12 +154,12 @@ def main():
     ]
 
     if not new_items and not removed_items:
-        print("No new rental places found.")
+        print("No new rental places found on Plaza.")
         return
 
     was_email_successful = False
     if new_items:
-        print("New rental places found:")
+        print("New rental places found on Plaza:")
         for item in new_items:
             print(f"{item['address']}, {item['cost']}")
         was_email_successful = send_email(
@@ -167,7 +167,7 @@ def main():
         )
 
     if removed_items:
-        print("Removed rental places:")
+        print("Rental places removed from Plaza:")
         for item in removed_items:
             print(f"{item['address']}, {item['cost']}")
 
