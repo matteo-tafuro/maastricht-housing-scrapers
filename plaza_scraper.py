@@ -130,6 +130,9 @@ def main():
     and sends an email if there are new rental places. Saves current items only if email
     was sent successfully.
     """
+
+    print("Starting Plaza scraper...")
+
     try:
         current_items = fetch_rental_places(HOMEPAGE_URL)
     except Exception as e:

@@ -282,6 +282,8 @@ def main():
     was sent successfully.
     """
 
+    print("Starting Maasland scraper...")
+
     driver, wait = initialize_webdriver()
 
     # Log in to the website
