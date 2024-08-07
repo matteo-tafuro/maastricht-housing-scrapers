@@ -155,10 +155,11 @@ def fetch_rental_places_url(driver, wait):
 
 def is_property_relevant(place_url, driver, wait):
     """
-    Discerns whether a property is relevant based on its metadata. First, it checks whether the
+    Discerns whether a property is relevant based on its availability and its metadata. If the
+    property is rented, it's not available. If it's not rented, the function first checks whether the
     property is eligible for allowance. If yes, it is considered a relevant property. If not, this
     info is not available or cannot be found, it looks for the keyword 'Single-Ed' in the property
-    description.
+    description. Also checks if the name contains 'rented', which makes the property not relevant.
 
     Args:
         place_url (str): The URL of the property.
@@ -175,6 +176,11 @@ def is_property_relevant(place_url, driver, wait):
 
     # Wait for the relevant metadata to be visible
     try:
+        name_section = wait.until(
+            EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, "section.intro > article > h2")
+            )
+        )
         metadata_section = wait.until(
             EC.visibility_of_element_located(
                 (By.CSS_SELECTOR, "div.detail-section.rent")
@@ -186,6 +192,11 @@ def is_property_relevant(place_url, driver, wait):
             )
         )
     except TimeoutException:
+        return False
+
+    # Check if the name contains 'rented'
+    name_text = name_section.text.strip()
+    if "rented" in name_text.lower():
         return False
 
     # Check for housing allowance information
