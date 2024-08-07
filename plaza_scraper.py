@@ -22,7 +22,7 @@ url = (
 )
 
 # Path to the JSON file to store previously seen items
-json_file_path = "previous_items.json"
+json_file_path = "plaza_previous_items.json"
 
 # Email settings
 gmail_user = os.getenv("GMAIL_USER")
