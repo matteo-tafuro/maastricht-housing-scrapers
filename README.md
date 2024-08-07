@@ -23,11 +23,11 @@ conda activate rental_scraper
 ```
 
 ### 3. Set Up Environment Variables
-Create a .env file in the project directory and add the following variables:
+Create a .env file in the project directory and add the following variables (see `.env.example` for reference):
 ```bash
-GMAIL_USER=your_email@gmail.com
-GMAIL_APP_PASSWORD=your_app_password
-RECIPIENT_EMAIL=recipient_email@example.com
+GMAIL_USER=your@email.com
+GMAIL_APP_PASSWORD=your_password
+RECIPIENT_EMAILS=first@recipient.com,second@recipient.com
 ```
 
 ## Usage
