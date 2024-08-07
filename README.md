@@ -28,7 +28,12 @@ Create a .env file in the project directory and add the following variables (see
 GMAIL_USER=your@email.com
 GMAIL_APP_PASSWORD=your_password
 RECIPIENT_EMAILS=first@recipient.com,second@recipient.com
+
+MAASLAND_EMAIL=your@email.com
+MAASLAND_PASSWORD=your_password
 ```
+
+The Maasland credentials are used to preview available rental places that are not publicly listed on the website yet.
 
 ## Usage
 
@@ -44,7 +49,6 @@ The script will:
 
 ## Automation
 You can use a cron job to automate the process. For example, to run the script every 5 minutes, you can add the following line to your crontab file:
-
 
 ```bash
 */5 * * * * /path/to/your/conda/environment/bin/python /path/to/your/rental_scraper.py
