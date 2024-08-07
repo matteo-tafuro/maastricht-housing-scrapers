@@ -18,18 +18,20 @@ from utils import send_email, save_current_items, load_previous_items
 load_dotenv(find_dotenv())
 
 # URL of the rental finder website
-url = (
+HOMEPAGE_URL = (
     "https://plaza.newnewnew.space/en/availables-places/living-place"
     "#?gesorteerd-op=prijs%2B&land=524&locatie=Maastricht-Nederland%2B-%2BLimburg"
 )
 
 # Path to the JSON file to store previously seen items
-json_file_path = "plaza_previous_items.json"
+JSON_FILE_PATH = "plaza_previous_items.json"
 
 # Email settings
-gmail_user = os.getenv("GMAIL_USER")
-gmail_password = os.getenv("GMAIL_APP_PASSWORD")
-recipient_emails = os.getenv("RECIPIENT_EMAILS").split(",")
+GMAIL_USER = os.getenv("GMAIL_USER")
+GMAIL_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+RECIPIENT_EMAILS = os.getenv("RECIPIENT_EMAILS").split(",")
+
+WEBSITE_NAME = "Plaza"
 
 
 def fetch_rental_places(url):
@@ -132,12 +134,12 @@ def main():
     was sent successfully.
     """
     try:
-        current_items = fetch_rental_places(url)
+        current_items = fetch_rental_places(HOMEPAGE_URL)
     except Exception as e:
         print(f"Error: {e}")
         return
 
-    previous_items = load_previous_items(json_file_path)
+    previous_items = load_previous_items(JSON_FILE_PATH)
 
     current_items_without_links = [
         {k: v for k, v in item.items() if k != "link"} for item in current_items
@@ -161,7 +163,7 @@ def main():
         for item in new_items:
             print(f"{item['address']}, {item['cost']}")
         was_email_successful = send_email(
-            new_items, gmail_user, gmail_password, recipient_emails
+            WEBSITE_NAME, new_items, GMAIL_USER, GMAIL_PASSWORD, RECIPIENT_EMAILS
         )
 
     if removed_items:
@@ -170,7 +172,7 @@ def main():
             print(f"{item['address']}, {item['cost']}")
 
     if was_email_successful:
-        save_current_items(json_file_path, current_items)
+        save_current_items(JSON_FILE_PATH, current_items)
 
 
 if __name__ == "__main__":

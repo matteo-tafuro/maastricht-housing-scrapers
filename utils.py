@@ -34,11 +34,12 @@ def save_current_items(json_file_path, items):
         json.dump(items_to_save, file, ensure_ascii=False, indent=4)
 
 
-def send_email(new_items, gmail_user, gmail_password, recipient_emails):
+def send_email(website_name, new_items, gmail_user, gmail_password, recipient_emails):
     """
     Sends an email with the details of new rental places.
 
     Args:
+        website_name (str): The name of the website where the rental places were found.
         new_items (list): A list of dictionaries representing the new rental places.
         gmail_user (str): The Gmail username used to send the email.
         gmail_password (str): The Gmail password used to send the email.
@@ -47,11 +48,14 @@ def send_email(new_items, gmail_user, gmail_password, recipient_emails):
     Returns:
         bool: True if the email was sent successfully, False otherwise.
     """
+
     # Set up the email content
     subject = (
-        f"{len(new_items)} new rental place{'s' if len(new_items) > 1 else ''} found!"
+        f"{website_name.upper()} | {len(new_items)} new rental "
+        f"place{'s' if len(new_items) > 1 else ''} found on {website_name}!"
     )
-    body = "New rental places found:\n\n"
+
+    body = f"New rental places were found on {website_name}:\n\n"
     for item in new_items:
         body += f"{item['address']}, {item['cost']}\n{item['link']}\n\n"
 
