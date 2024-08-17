@@ -4,6 +4,7 @@ import time
 
 from dotenv import load_dotenv, find_dotenv
 from selenium import webdriver
+from selenium.common import NoSuchElementException, TimeoutException
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -61,7 +62,7 @@ def fetch_rental_places(url):
     while retries < max_retries:
         # Initialize the WebDriver. Define options
         options = webdriver.ChromeOptions()
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         # Start the WebDriver
@@ -78,12 +79,29 @@ def fetch_rental_places(url):
                 )
             )
         )
+        print("Page loaded successfully.")
 
-        # Extract the desired div using XPath
-        rental_div = driver.find_element(
-            By.XPATH,
-            "/html/body/main/div/div[3]/div/div/div/div/div/div/div/div/div/div[3]/div/div[2]",
-        )
+        # Extract the div that contains each rental place
+        try:
+            rental_div = WebDriverWait(driver, 20).until(
+                EC.visibility_of_element_located(
+                    (
+                        By.XPATH,
+                        "/html/body/main/div/div[3]/div/div/div/div/div/div/div/div/div/div[3]/div/div[2]",
+                    )
+                )
+            )
+            print("Rental div found.")
+        except TimeoutException:
+            try:
+                # Try to find the element that indicates there are no rental places available
+                driver.find_element(By.CSS_SELECTOR, "div.empty-state.ng-scope")
+                print("No offers available.")
+                return rental_places
+            except NoSuchElementException as e:
+                print("Error fetching offer results.")
+                raise e
+
         rental_sections = rental_div.find_elements(By.TAG_NAME, "section")
 
         # Get the address and cost from each section
