@@ -8,7 +8,7 @@
 __pycache__
 # Logs
 geckodriver.log
-# Output of the main function
-previous_items.json
+# Cached data (previously fetched files)
+cache
 # Sensitive data
 .env

@@ -4,6 +4,9 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+PROJECT_ROOT = os.path.dirname(__file__)
+CACHE_DIR = os.path.join(PROJECT_ROOT, "cache")
+
 
 def load_previous_items(json_file_path):
     """

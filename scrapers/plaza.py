@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 
 from dotenv import load_dotenv, find_dotenv
@@ -9,7 +10,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
-from utils import send_email, save_current_items, load_previous_items
+# Add the parent directory to the sys.path to import the utils module
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from utils import load_previous_items, send_email, save_current_items, CACHE_DIR
 
 # Load environment variables from .env file
 load_dotenv(find_dotenv())
@@ -29,6 +33,12 @@ GMAIL_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
 RECIPIENT_EMAILS = os.getenv("RECIPIENT_EMAILS").split(",")
 
 WEBSITE_NAME = "Plaza"
+
+
+# Path to the JSON file to store previously seen items
+JSON_FILE_PATH = os.path.join(CACHE_DIR, f"{WEBSITE_NAME.lower()}.json")
+# Create the cache directory if it doesn't exist
+os.makedirs(CACHE_DIR, exist_ok=True)
 
 
 def fetch_rental_places(url):
