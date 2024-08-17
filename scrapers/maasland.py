@@ -153,10 +153,10 @@ def fetch_rental_places_url(driver, wait):
         )
     except TimeoutException:
         try:
-            wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "empty.prose")))
+            driver.find_element(By.CLASS_NAME, "empty.prose")
             print("No offers available.")
             return offer_hrefs
-        except TimeoutException:
+        except NoSuchElementException:
             print("Error fetching offer results.")
             return offer_hrefs
 
