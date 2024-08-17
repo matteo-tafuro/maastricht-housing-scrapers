@@ -138,20 +138,30 @@ def fetch_rental_places_url(driver, wait):
         list: A list of URLs of all available rental places.
     """
 
+    # Initialize an empty list to store hrefs
+    offer_hrefs = []
+
     # Go to the homepage URL if not there already
     if driver.current_url != HOMEPAGE_URL:
         driver.get(HOMEPAGE_URL)
 
-    # Wait for the div element with class 'offer-results' to be visible
-    offer_results = wait.until(
-        EC.visibility_of_element_located((By.CLASS_NAME, "offer-results"))
-    )
+    # Wait for the div element with class 'offer-results' to be visible. If it times out AND
+    # a section with class 'empty.prose' is visible, it means there are no offers available.
+    try:
+        offer_results = wait.until(
+            EC.visibility_of_element_located((By.CLASS_NAME, "offer-results"))
+        )
+    except TimeoutException:
+        try:
+            wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "empty.prose")))
+            print("No offers available.")
+            return offer_hrefs
+        except TimeoutException:
+            print("Error fetching offer results.")
+            return offer_hrefs
 
     # Find all div elements with class 'offer' within the offer-results div
     offers = offer_results.find_elements(By.CLASS_NAME, "offer")
-
-    # Initialize an empty list to store hrefs
-    offer_hrefs = []
 
     # Loop through each offer and extract the href attribute
     for offer in offers:
