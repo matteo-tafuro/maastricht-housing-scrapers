@@ -156,9 +156,9 @@ def fetch_rental_places_url(driver, wait):
             driver.find_element(By.CLASS_NAME, "empty.prose")
             print("No offers available.")
             return offer_hrefs
-        except NoSuchElementException:
+        except NoSuchElementException as e:
             print("Error fetching offer results.")
-            return offer_hrefs
+            raise e
 
     # Find all div elements with class 'offer' within the offer-results div
     offers = offer_results.find_elements(By.CLASS_NAME, "offer")
