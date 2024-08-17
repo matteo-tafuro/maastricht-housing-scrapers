@@ -120,8 +120,10 @@ def login_on_website(driver, wait):
     # Click the sign-in button
     sign_in_button.click()
 
-    # Wait for the homepage to load by waiting for the div element with class 'offer-results' to be visible
-    wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "offer-results")))
+    # Wait for the homepage to load by waiting for the section with ID 'main-content'
+    WebDriverWait(driver, 20).until(
+        EC.visibility_of_element_located((By.ID, "main-content"))
+    )
 
 
 def fetch_rental_places_url(driver, wait):
